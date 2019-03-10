@@ -306,7 +306,7 @@
             htmlString += color_wheel[i].g+', ';
             htmlString += color_wheel[i].b;
             htmlString += '); width:'
-            htmlString += w/color_wheel.length+'px;';
+            htmlString += Math.floor(w/color_wheel.length)+'px;';
             htmlString += '"></div>';
         }
         div.innerHTML = htmlString;

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>ATLAS Colors</title>
-    <meta name="description" content="ATLAS color gradient generator (acme only)">
+    <meta name="description" content="ATLAS color gradient generator (acme only at the moment)">
 	  <meta name="author" content="Clement Zheng">
 	  <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -296,6 +296,7 @@
     function generateColorPicker(divID) {
         var div = document.getElementById(divID);
         var w = div.offsetWidth;
+        console.log(w);
         var htmlString = '';
         for (i in color_wheel) {
             htmlString += '<div id="colorpicker-';
@@ -305,7 +306,7 @@
             htmlString += color_wheel[i].g+', ';
             htmlString += color_wheel[i].b;
             htmlString += '); width:'
-            htmlString += w/color_wheel.length+'px;';
+            htmlString += 100/color_wheel.length+'%;';
             htmlString += '"></div>';
         }
         div.innerHTML = htmlString;

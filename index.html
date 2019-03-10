@@ -120,7 +120,7 @@
           transition: all ease-in-out 200ms;
           margin-top: 0px;
           cursor: pointer;
-          padding: 1em;
+          padding: 1em 0;
           color: white;
           text-align: center;
           box-sizing: border-box;
@@ -306,7 +306,7 @@
             htmlString += color_wheel[i].g+', ';
             htmlString += color_wheel[i].b;
             htmlString += '); width:'
-            htmlString += 100/color_wheel.length+'%;';
+            htmlString += w/color_wheel.length+'px;';
             htmlString += '"></div>';
         }
         div.innerHTML = htmlString;

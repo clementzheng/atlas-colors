@@ -491,7 +491,7 @@
       // ctx.stroke();
     }
 
-    // var radial_offset = 1.9;
+    var radial_offset = 1.9;
     // function colorGradientRadial() {
     //   ctx.clearRect(0, 0, canvasW, canvasH);
 
@@ -600,10 +600,13 @@
            var index = (j + i * canvasW) * 4;
            if (lch_bool) {
              var mixed = chroma.mix(chroma(colA), chroma(colB), tval, 'lch');
-             mixed = chroma.mix(chroma(col_center), mixed, rval, 'lch');
-             canvasData.data[index+0] = mixed.get('rgb.r');
-             canvasData.data[index+1] = mixed.get('rgb.g');
-             canvasData.data[index+2] = mixed.get('rgb.b');
+             var mixed2 = chroma.mix(col_center, mixed, Math.pow(rval, 1), 'lrgb');
+              canvasData.data[index+0] = mixed2.get('rgb.r');
+              canvasData.data[index+1] = mixed2.get('rgb.g');
+              canvasData.data[index+2] = mixed2.get('rgb.b');
+              // canvasData.data[index+0] = mixed.get('rgb.r');
+              // canvasData.data[index+1] = mixed.get('rgb.g');
+              // canvasData.data[index+2] = mixed.get('rgb.b');
            } else {
              var d0 = Math.pow(tval * Math.pow(colB.r, 2) + (1-tval) * Math.pow(colA.r, 2), 0.5);
              var d1 = Math.pow(tval * Math.pow(colB.g, 2) + (1-tval) * Math.pow(colA.g, 2), 0.5);
@@ -614,9 +617,22 @@
              canvasData.data[index+2] = Math.pow(rval * Math.pow(d2, 2) + (1-rval) * Math.pow(col_center.b, 2), 0.5);
            }
            canvasData.data[index+3] = mask[i][j];
+           //  canvasData.data[index+3] = 255;
         }
       }      
       ctx.putImageData(canvasData, 0, 0);
+      
+      // var loc = [];
+      // for (var i=0; i<color_active.length; i++) {
+      //   var angle_gap = Math.PI*2/color_active.length;
+      //   var pos = {x: (canvasW/2) - (canvasW/radial_offset)*Math.cos(gradient_angle + angle_gap*i + Math.PI/2), y: (canvasW/2) - (canvasW/radial_offset)*Math.sin(gradient_angle + angle_gap*i + Math.PI/2)};
+      //   loc.push(pos);
+      // }
+      // for (var i=0; i<loc.length; i++) {
+      //   ctx.beginPath();
+      //   ctx.ellipse(loc[i].x, loc[i].y, 10, 10, Math.PI / 4, 0, 2 * Math.PI);
+      //   ctx.stroke();
+      // }
     }
 
     function lineCPT(A, B, P) {

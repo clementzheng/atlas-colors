@@ -17,7 +17,7 @@
       html, body {
           font-family: Helvetica, sans-serif;
           color: #222;
-          font-size: 12px;
+          font-size: 10px;
           font-weight: 600;
           line-height: 1.0;
           overflow-x: hidden;
@@ -163,8 +163,10 @@
       }
 
       @media only screen 
-      and (min-width: 1000px)  {
-
+      and (min-width: 800px)  {
+        html, body {
+          font-size: 12px;
+        }      
       }
 
       .slider {
@@ -551,12 +553,29 @@
         var theta = (Math.PI/2 + gradient_angle + i*angle_gap)%(Math.PI*2);
         angle.push(theta);
       }
-
+      var col_center;
+      if (lch_bool) {
+        var col_arr = [];
+        for (var i=0; i<color_active.length; i++) {
+          col_arr.push(color_active[i].color);
+        }
+        col_center = chroma.average(col_arr, 'lch');
+      } else {
+        col_center = {r:0, g:0, b:0};
+        for (var i=0; i<color_active.length; i++) {
+          col_center.r = col_center.r + Math.pow(color_active[i].color.r, 2);
+          col_center.g = col_center.g + Math.pow(color_active[i].color.g, 2);
+          col_center.b = col_center.b + Math.pow(color_active[i].color.b, 2);
+        }
+        col_center.r = Math.pow(col_center.r, 0.5);
+        col_center.g = Math.pow(col_center.g, 0.5);
+        col_center.b = Math.pow(col_center.b, 0.5);
+      }
       var canvasData = ctx.getImageData(0, 0, canvasW, canvasH);
       for (var i=0; i<canvasH; i++) {
          for (var j=0; j<canvasW; j++) {
            var theta = Math.atan2(i-canvasH/2, j-canvasW/2) + Math.PI;
-           var tval = 0;
+           var tval = 0, rval = 0;
            var colA, colB;
            for (var k=0; k<angle.length; k++) {
              var k1 = (k+1)%angle.length;
@@ -570,6 +589,9 @@
              }
              if (inside) {
                tval = flip ? (angle_gap - angle[k1] + theta)/angle_gap : (theta - angle[k])/angle_gap;
+               rval = Math.pow(Math.pow(i-canvasH/2, 2) + Math.pow(j-canvasW/2, 2), 0.5);
+               rval = rval > canvasW/2 ? 1 : rval/(canvasW/2);
+               rval = Math.pow(rval, 0.5);
                colA = color_active[k].color;
                colB = color_active[k1].color;
                break;
@@ -578,13 +600,18 @@
            var index = (j + i * canvasW) * 4;
            if (lch_bool) {
              var mixed = chroma.mix(chroma(colA), chroma(colB), tval, 'lch');
+             mixed = chroma.mix(chroma(col_center), mixed, rval, 'lch');
              canvasData.data[index+0] = mixed.get('rgb.r');
              canvasData.data[index+1] = mixed.get('rgb.g');
              canvasData.data[index+2] = mixed.get('rgb.b');
            } else {
-             canvasData.data[index+0] = Math.pow(tval * Math.pow(colB.r, 2) + (1-tval) * Math.pow(colA.r, 2), 0.5);
-             canvasData.data[index+1] = Math.pow(tval * Math.pow(colB.g, 2) + (1-tval) * Math.pow(colA.g, 2), 0.5);
-             canvasData.data[index+2] = Math.pow(tval * Math.pow(colB.b, 2) + (1-tval) * Math.pow(colA.b, 2), 0.5);
+             var d0 = Math.pow(tval * Math.pow(colB.r, 2) + (1-tval) * Math.pow(colA.r, 2), 0.5);
+             var d1 = Math.pow(tval * Math.pow(colB.g, 2) + (1-tval) * Math.pow(colA.g, 2), 0.5);
+             var d2 = Math.pow(tval * Math.pow(colB.b, 2) + (1-tval) * Math.pow(colA.b, 2), 0.5);
+
+             canvasData.data[index+0] = Math.pow(rval * Math.pow(d0, 2) + (1-rval) * Math.pow(col_center.r, 2), 0.5);
+             canvasData.data[index+1] = Math.pow(rval * Math.pow(d1, 2) + (1-rval) * Math.pow(col_center.g, 2), 0.5);
+             canvasData.data[index+2] = Math.pow(rval * Math.pow(d2, 2) + (1-rval) * Math.pow(col_center.b, 2), 0.5);
            }
            canvasData.data[index+3] = mask[i][j];
         }

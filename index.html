@@ -73,6 +73,10 @@
           margin-bottom: 2em;
       }
 
+      .control.half {
+          width: 50%;
+      }
+
       #gradient_toggle .option {
           position: relative;
           float: left;
@@ -100,6 +104,32 @@
 
       #gradient_toggle.right .toggle {
         left: calc(8em - 2px);
+      }
+
+      #calc_grad_div .button {
+          position: relative;
+          float: left;
+          width: 100%;
+          height: 2.5em;
+          border: 2px solid #000;
+          box-sizing: border-box;
+          margin-right: -2px;
+          text-align: center;
+          padding-top: 0.7em;
+          text-transform: uppercase;
+          user-select: none;
+          cursor: pointer;
+      }
+
+      #calc_grad_div .button:hover {
+          background: #AAA;
+      }
+      #calc_grad_div .button:active {
+          background: #222;
+      }
+      #calc_grad_div .button.active {
+          background: #222;
+          color: white;
       }
 
       #gradient_angle_val {
@@ -182,11 +212,14 @@
     <div id="container">
 
         <div id="menu">
-            <div id="gradient_toggle" class="control">
+            <div id="gradient_toggle" class="control half">
                 <div class="toggle"></div>
                 <div class="option">Linear</div>
                 <div class="option">Radial</div>
             </div>
+            <div id="calc_grad_div" class="control half">
+                <div id="calc_grad_button" class="button" onclick="generateLCH()">generate LCH gradient</div>
+            </div>  
             <div id="step_count" class="control">
               <span>Gradient Angle</span><span id="gradient_angle_val">0</span>
               <input type="range" min="0" max="360" value="0" step="5" class="slider" id="gradient_angle" name="angle">
@@ -300,7 +333,6 @@
     function generateColorPicker(divID) {
         var div = document.getElementById(divID);
         var w = div.offsetWidth;
-        console.log(w);
         var htmlString = '';
         for (i in color_wheel) {
             htmlString += '<div id="colorpicker-';
@@ -346,6 +378,20 @@
       for (i in color_active) {
         color_div[color_active[i].index].innerHTML = i;
       }
+    }
+
+    var lch_bool = false;
+    function generateLCH() {
+      lch_bool = true;
+      var div = document.getElementById('calc_grad_button');
+      div.classList.add('active');
+      div.innerHTML = '&#10710;';
+      setTimeout(function() {
+        updateCanvas();
+        lch_bool = false;
+        div.classList.remove('active');
+        div.innerHTML = 'calculate LCH gradient';
+      }, 100);
     }
 
     function updateCanvas() {
@@ -415,13 +461,20 @@
             }
             var index = (j + i * canvasW) * 4;
 
-            canvasData.data[index+0] = Math.pow(tval * Math.pow(colB.r, 2) + (1-tval) * Math.pow(colA.r, 2), 0.5);
-            canvasData.data[index+1] = Math.pow(tval * Math.pow(colB.g, 2) + (1-tval) * Math.pow(colA.g, 2), 0.5);
-            canvasData.data[index+2] = Math.pow(tval * Math.pow(colB.b, 2) + (1-tval) * Math.pow(colA.b, 2), 0.5);
-            
-            // canvasData.data[index+0] = tval * colB.r + (1-tval) * colA.r;
-            // canvasData.data[index+1] = tval * colB.g + (1-tval) * colA.g;
-            // canvasData.data[index+2] = tval * colB.b + (1-tval) * colA.b;
+            if (lch_bool) {
+              var mixed = chroma.mix(chroma(colA), chroma(colB), tval, 'lch');
+              canvasData.data[index+0] = mixed.get('rgb.r');
+              canvasData.data[index+1] = mixed.get('rgb.g');
+              canvasData.data[index+2] = mixed.get('rgb.b');
+            } else {
+              canvasData.data[index+0] = Math.pow(tval * Math.pow(colB.r, 2) + (1-tval) * Math.pow(colA.r, 2), 0.5);
+              canvasData.data[index+1] = Math.pow(tval * Math.pow(colB.g, 2) + (1-tval) * Math.pow(colA.g, 2), 0.5);
+              canvasData.data[index+2] = Math.pow(tval * Math.pow(colB.b, 2) + (1-tval) * Math.pow(colA.b, 2), 0.5);
+              
+              // canvasData.data[index+0] = tval * colB.r + (1-tval) * colA.r;
+              // canvasData.data[index+1] = tval * colB.g + (1-tval) * colA.g;
+              // canvasData.data[index+2] = tval * colB.b + (1-tval) * colA.b;
+            }
 
             canvasData.data[index+3] = mask[i][j];
         }
@@ -436,52 +489,107 @@
       // ctx.stroke();
     }
 
-    var radial_offset = 1.9;
+    // var radial_offset = 1.9;
+    // function colorGradientRadial() {
+    //   ctx.clearRect(0, 0, canvasW, canvasH);
+
+    //   var loc = [];
+    //   for (var i=0; i<color_active.length; i++) {
+    //     var angle_gap = Math.PI*2/color_active.length;
+    //     var pos = {x: (canvasW/2) - (canvasW/radial_offset)*Math.cos(gradient_angle + angle_gap*i + Math.PI/2), y: (canvasW/2) - (canvasW/radial_offset)*Math.sin(gradient_angle + angle_gap*i + Math.PI/2)};
+    //     loc.push(pos);
+    //   }
+
+    //   var canvasData = ctx.getImageData(0, 0, canvasW, canvasH);
+    //   for (var i=0; i<canvasH; i++) {
+    //     for (var j=0; j<canvasW; j++) {
+    //       var d = [];
+    //       for (var k=0; k<loc.length; k++) {
+    //         var sqdis = Math.pow(Math.pow((loc[k].x - j), 2) + Math.pow((loc[k].y - i), 2), 0.5);
+    //         d.push({d:sqdis, i:k});
+    //       }
+    //       var inv = [];
+    //       var totalD = 0;
+    //       for (var k=0; k<loc.length; k++) {
+    //         var invd = d[k].d == 0 ? 1 : 1/d[k].d;
+    //         totalD = totalD + invd;
+    //         inv.push(invd);
+    //       }
+    //       var index = (j + i * canvasW) * 4;  
+
+    //       if (lch_bool) {
+            
+    //       } else {
+    //         var d0=0, d1=0, d2=0;
+    //         for (var k=0; k<loc.length; k++) {
+    //           d0 = d0 + Math.pow(color_active[k].color.r, 2)*inv[k]/totalD;
+    //           d1 = d1 + Math.pow(color_active[k].color.g, 2)*inv[k]/totalD;
+    //           d2 = d2 + Math.pow(color_active[k].color.b, 2)*inv[k]/totalD;
+    //         }
+    //         canvasData.data[index+0] = Math.pow(d0, 0.5);
+    //         canvasData.data[index+1] = Math.pow(d1, 0.5);
+    //         canvasData.data[index+2] = Math.pow(d2, 0.5);
+    //       }
+    //       canvasData.data[index+3] = mask[i][j];
+    //     }
+    //   }
+    //   ctx.putImageData(canvasData, 0, 0);
+
+    //   // for (var i=0; i<loc.length; i++) {
+    //   //   ctx.beginPath();
+    //   //   ctx.ellipse(loc[i].x, loc[i].y, 10, 10, Math.PI / 4, 0, 2 * Math.PI);
+    //   //   ctx.stroke();
+    //   // }
+    // }
+
     function colorGradientRadial() {
       ctx.clearRect(0, 0, canvasW, canvasH);
 
-      var loc = [];
+      var angle = [];
+      var angle_gap = Math.PI*2/color_active.length;
       for (var i=0; i<color_active.length; i++) {
-        var angle_gap = Math.PI*2/color_active.length;
-        var pos = {x: (canvasW/2) - (canvasW/radial_offset)*Math.cos(gradient_angle + angle_gap*i + Math.PI/2), y: (canvasW/2) - (canvasW/radial_offset)*Math.sin(gradient_angle + angle_gap*i + Math.PI/2)};
-        loc.push(pos);
+        var theta = (Math.PI/2 + gradient_angle + i*angle_gap)%(Math.PI*2);
+        angle.push(theta);
       }
 
       var canvasData = ctx.getImageData(0, 0, canvasW, canvasH);
       for (var i=0; i<canvasH; i++) {
-        for (var j=0; j<canvasW; j++) {
-          var d = [];
-          for (var k=0; k<loc.length; k++) {
-            var sqdis = Math.pow(Math.pow((loc[k].x - j), 2) + Math.pow((loc[k].y - i), 2), 0.5);
-            d.push(sqdis);
-          }
-          var inv = [];
-          var totalD = 0;
-          for (var k=0; k<loc.length; k++) {
-            var invd = d[k] == 0 ? 1 : 1/d[k];
-            totalD = totalD + invd;
-            inv.push(invd);
-          }
-          var index = (j + i * canvasW) * 4;  
-          var d0=0, d1=0, d2=0;
-          for (var k=0; k<loc.length; k++) {
-            d0 = d0 + Math.pow(color_active[k].color.r, 2)*inv[k]/totalD;
-            d1 = d1 + Math.pow(color_active[k].color.g, 2)*inv[k]/totalD;
-            d2 = d2 + Math.pow(color_active[k].color.b, 2)*inv[k]/totalD;
-          }
-          canvasData.data[index+0] = Math.pow(d0, 0.5);
-          canvasData.data[index+1] = Math.pow(d1, 0.5);
-          canvasData.data[index+2] = Math.pow(d2, 0.5);
-          canvasData.data[index+3] = mask[i][j];
+         for (var j=0; j<canvasW; j++) {
+           var theta = Math.atan2(i-canvasH/2, j-canvasW/2) + Math.PI;
+           var tval = 0;
+           var colA, colB;
+           for (var k=0; k<angle.length; k++) {
+             var k1 = (k+1)%angle.length;
+             var inside = false;
+             var flip = false;
+             if (angle[k] < angle[k1]) {
+               inside = theta >= angle[k] && theta < angle[k1];
+             } else {
+               inside = theta >= angle[k] || theta < angle[k1];
+               flip = theta < angle[k1];
+             }
+             if (inside) {
+               tval = flip ? (angle_gap - angle[k1] + theta)/angle_gap : (theta - angle[k])/angle_gap;
+               colA = color_active[k].color;
+               colB = color_active[k1].color;
+               break;
+             }
+           }
+           var index = (j + i * canvasW) * 4;
+           if (lch_bool) {
+             var mixed = chroma.mix(chroma(colA), chroma(colB), tval, 'lch');
+             canvasData.data[index+0] = mixed.get('rgb.r');
+             canvasData.data[index+1] = mixed.get('rgb.g');
+             canvasData.data[index+2] = mixed.get('rgb.b');
+           } else {
+             canvasData.data[index+0] = Math.pow(tval * Math.pow(colB.r, 2) + (1-tval) * Math.pow(colA.r, 2), 0.5);
+             canvasData.data[index+1] = Math.pow(tval * Math.pow(colB.g, 2) + (1-tval) * Math.pow(colA.g, 2), 0.5);
+             canvasData.data[index+2] = Math.pow(tval * Math.pow(colB.b, 2) + (1-tval) * Math.pow(colA.b, 2), 0.5);
+           }
+           canvasData.data[index+3] = mask[i][j];
         }
-      }
+      }      
       ctx.putImageData(canvasData, 0, 0);
-
-      // for (var i=0; i<loc.length; i++) {
-      //   ctx.beginPath();
-      //   ctx.ellipse(loc[i].x, loc[i].y, 10, 10, Math.PI / 4, 0, 2 * Math.PI);
-      //   ctx.stroke();
-      // }
     }
 
     function lineCPT(A, B, P) {

@@ -374,6 +374,12 @@
             mask_loaded = false;
             updateCanvas();
           } else {
+            for (i in symbol_base64) {
+              var s = document.getElementById('symbol-'+i);
+              if (s.classList.contains('active')) {
+                s.classList.remove('active');
+              }
+            }
             this.classList.add('active');
             var index = parseInt(this.id.split('-')[1]);
             mask_selection = index;
